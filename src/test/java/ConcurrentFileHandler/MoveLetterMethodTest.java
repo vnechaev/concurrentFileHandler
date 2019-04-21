@@ -1,18 +1,17 @@
 package ConcurrentFileHandler;
 
 import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 
-public class MainTest {
+public class MoveLetterMethodTest {
 
     @Test
     public void checkBorderLetter() {
-        String actual = Main.moveEveryLetterInIntervalToNextAlphabet(
+        String outputString = Main.moveEveryLetterInIntervalToNextAlphabet(
                 "z",
                 new Interval(0, 1)
         );
-        assertEquals("Неверный результат обработки буквы z", "a", actual);
+        assertEquals("Неверный результат обработки буквы z", "a", outputString);
     }
 
     @Test
