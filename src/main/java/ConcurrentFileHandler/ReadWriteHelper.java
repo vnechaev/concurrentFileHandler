@@ -13,13 +13,14 @@ public class ReadWriteHelper {
 
         String s;
         StringBuilder sb = new StringBuilder();
-
+        String lineSeparator = "";
         while ((s = in.readLine()) != null) {
             if (s.chars().allMatch(Character::isLetter)) {
-                sb.append(s).append("\n");
+                sb.append(lineSeparator).append(s);
             } else {
                 throw new NotOnlyAlphabetException(String.format("File %s contains not only alphabet symbols", filename));
             }
+            lineSeparator = "\n";
         }
         in.close();
         return sb.toString();
