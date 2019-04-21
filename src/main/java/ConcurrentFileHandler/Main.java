@@ -1,5 +1,8 @@
 package ConcurrentFileHandler;
 
+import ConcurrentFileHandler.exceptions.NotOnlyAlphabetException;
+
+import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -8,17 +11,26 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 public class Main {
-    public static void main(String[] args) throws ExecutionException, InterruptedException {
-        final String inputString = "abcdefghijklmnoqxyz";
+    public static final int THREAD_COUNT = 5;
 
-        int parts = 5;
+    public static void main(String[] args) throws ExecutionException, InterruptedException, IOException, NotOnlyAlphabetException {
+        String inputString = ReadWriteHelper.read("src/main/resources/alphabet.txt");
+        String outputFileName = "target/result.txt";
+
+        readConcurrentProcessWrite(inputString, outputFileName);
+    }
+
+    public static void readConcurrentProcessWrite(String inputString, String outputFileName) throws InterruptedException, ExecutionException, IOException {
+        String resultString = concurrentProcessCharToNextAlphabet(inputString);
+        ReadWriteHelper.writeResultToFile(resultString, outputFileName);
+    }
+
+    public static String concurrentProcessCharToNextAlphabet(String inputString) throws InterruptedException, ExecutionException {
         int size = inputString.length();
+        List<Interval> taskIntervals = Interval.divideJobToIntervals(THREAD_COUNT, size);
+        ExecutorService executors = Executors.newFixedThreadPool(THREAD_COUNT);
 
-        List<Interval> taskIntervals = Interval.divideJobToIntervals(parts, size);
-
-        ExecutorService executors = Executors.newFixedThreadPool(parts);
         List<Future<String>> futures = new LinkedList<>();
-
         for (Interval interval : taskIntervals) {
             Future<String> future = executors.submit(
                     () -> moveEveryLetterInIntervalToNextAlphabet(inputString, interval)
@@ -30,16 +42,25 @@ public class Main {
         for (Future future : futures) {
             stringBuilder.append(future.get());
         }
-
-        System.out.println(stringBuilder.toString());
+        executors.shutdown();
+        return stringBuilder.toString();
     }
+
 
     public static String moveEveryLetterInIntervalToNextAlphabet(String inputString, Interval interval) {
         String inputChunk = inputString.substring(interval.getStart(), interval.getEnd());
-        char[] array = inputChunk.toCharArray();
+        char[] inputChunkCharArray = inputChunk.toCharArray();
         StringBuilder stringBuilder = new StringBuilder();
-        for (char character : array) {
-            stringBuilder.append((char) (character + 1));
+        for (char character : inputChunkCharArray) {
+            if (character == '\n') {
+                stringBuilder.append(character);
+            } else {
+                if (character != 'z') {
+                    stringBuilder.append((char) (character + 1));
+                } else {
+                    stringBuilder.append('a');
+                }
+            }
         }
         return stringBuilder.toString();
     }
